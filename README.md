@@ -68,13 +68,11 @@ The app will be available at **http://localhost:8080**.
 
 ```bash
 docker build -t bankapp .
-```
 
 ### Multistage Dockerfile (smaller image)
 
 ```bash
 docker build -f Dockerfile.multistage -t bankapp .
-```
 
 ### Docker Compose
 
@@ -85,7 +83,6 @@ docker compose up -d        # start
 docker compose logs -f      # view logs
 docker compose down         # stop
 docker compose down -v      # stop and remove volumes
-```
 
 **Services:**
 
@@ -96,7 +93,6 @@ docker compose down -v      # stop and remove volumes
 
 ## Project Structure
 
-```
 src/main/java/com/example/bankapp/
 ├── config/          # Security configuration
 ├── controller/      # Web endpoints
@@ -108,7 +104,6 @@ src/main/resources/
 ├── templates/       # Thymeleaf HTML pages
 ├── static/          # CSS, JS (theme toggle)
 └── application.properties
-```
 
 ## Environment Variables
 
