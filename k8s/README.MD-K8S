@@ -1,0 +1,223 @@
+
+# Day 54 – Kubernetes ConfigMaps and Secrets
+
+## 📌 Overview
+
+In Kubernetes, applications often require configuration such as environment variables, database credentials, API keys, and feature flags. Hardcoding these values inside container images leads to poor flexibility and requires rebuilding images for every change.
+
+Kubernetes provides two resources to solve this:
+
+- **ConfigMaps** → for non-sensitive configuration
+- **Secrets** → for sensitive data
+
+---
+
+## 🔹 What is a ConfigMap?
+
+A ConfigMap is used to store non-sensitive configuration data in key-value format.
+
+### ✅ Use Cases:
+- Application environment variables
+- Port numbers
+- Feature flags
+- Configuration files (e.g., nginx.conf)
+
+### 🔧 Example:
+```bash
+kubectl create configmap app-config \
+  --from-literal=APP_ENV=production \
+  --from-literal=APP_DEBUG=false \
+  --from-literal=APP_PORT=8080
+
+📌 Key Point:
+	•	Stored as plain text
+	•	No encryption
+
+⸻
+
+🔹 What is a Secret?
+
+A Secret is used to store sensitive information such as passwords, tokens, and API keys.
+
+✅ Use Cases:
+	•	Database credentials
+	•	API keys
+	•	TLS certificates
+
+🔧 Example:
+
+kubectl create secret generic db-credentials \
+  --from-literal=DB_USER=admin \
+  --from-literal=DB_PASSWORD=s3cureP@ssw0rd
+
+
+⸻
+
+⚠️ Important: Base64 is NOT Encryption
+
+Secrets are stored in base64 format:
+
+DB_PASSWORD: czNjdXJlUEBzc3cwcmQ=
+
+Decode:
+
+echo 'czNjdXJlUEBzc3cwcmQ=' | base64 --decode
+
+👉 Output:
+
+s3cureP@ssw0rd
+
+🚨 Conclusion:
+	•	Base64 = Encoding, not encryption
+	•	Anyone with access can decode it
+
+⸻
+
+🔹 ConfigMap from File
+
+ConfigMaps can also store entire configuration files.
+
+Example: Nginx Config
+
+server {
+    listen 80;
+
+    location /health {
+        return 200 'healthy';
+        add_header Content-Type text/plain;
+    }
+}
+
+Create:
+
+kubectl create configmap nginx-config \
+  --from-file=default.conf=default.conf
+
+
+⸻
+
+🔹 Using ConfigMaps in Pods
+
+Method 1: Environment Variables
+
+envFrom:
+- configMapRef:
+    name: app-config
+
+🔍 Behavior:
+	•	Injects all key-value pairs as environment variables
+	•	Available at container startup
+
+⸻
+
+Method 2: Volume Mount
+
+volumeMounts:
+- name: config-volume
+  mountPath: /etc/nginx/conf.d
+
+🔍 Behavior:
+	•	Mounts ConfigMap as files
+	•	Each key becomes a file
+	•	Used for large configs (like nginx, apache)
+
+⸻
+
+🔹 Using Secrets in Pods
+
+Inject as Environment Variable
+
+env:
+- name: DB_USER
+  valueFrom:
+    secretKeyRef:
+      name: db-credentials
+      key: DB_USER
+
+
+⸻
+
+Mount as Volume
+
+volumes:
+- name: secret-volume
+  secret:
+    secretName: db-credentials
+
+volumeMounts:
+- name: secret-volume
+  mountPath: /etc/db-credentials
+  readOnly: true
+
+🔍 Behavior:
+	•	Each key becomes a file
+	•	File content is decoded plaintext
+
+⸻
+
+🔥 Environment Variables vs Volume Mounts
+
+Feature	Environment Variables	Volume Mount
+Data type	Key-value	Files
+Update support	❌ No	✅ Yes
+Use case	Simple config	Complex config files
+
+
+⸻
+
+🔄 ConfigMap Update Behavior
+
+Scenario:
+	•	ConfigMap mounted as volume
+	•	Value updated using patch command
+
+kubectl patch configmap live-config \
+  --type merge \
+  -p '{"data":{"message":"world"}}'
+
+Result:
+	•	File inside pod updates automatically (30–60 sec)
+	•	No pod restart required
+
+⸻
+
+❌ Limitation:
+	•	Environment variables do NOT update dynamically
+	•	Require pod restart
+
+⸻
+
+🧠 Best Practices
+	•	Never store secrets in ConfigMaps
+	•	Use Secrets for all sensitive data
+	•	Enable encryption at rest in production clusters
+	•	Use RBAC to restrict access to Secrets
+	•	Prefer volume mounts for dynamic configuration
+	•	Avoid hardcoding configuration in container images
+
+⸻
+
+🧪 Verification Commands
+
+kubectl get configmap app-config -o yaml
+kubectl get secret db-credentials -o yaml
+kubectl exec <pod> -- printenv
+kubectl exec <pod> -- cat /etc/db-credentials/DB_PASSWORD
+
+
+⸻
+
+🧹 Cleanup
+
+kubectl delete pod --all
+kubectl delete configmap --all
+kubectl delete secret --all
+
+
+⸻
+
+🚀 Key Takeaways
+	•	ConfigMaps and Secrets decouple configuration from code
+	•	Secrets are not fully secure without additional measures
+	•	Volume-mounted configs update dynamically
+	•	Environment variables are static after pod creation
