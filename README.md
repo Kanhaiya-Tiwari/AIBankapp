@@ -116,7 +116,6 @@ src/main/resources/
 | `MYSQL_PASSWORD` | Test@123   | Database password    |
 
 ## Branch Roadmap
-
 | Branch   | What it adds                                          |
 |----------|-------------------------------------------------------|
 | `start`  | Modernized app (backend + frontend)                   |
