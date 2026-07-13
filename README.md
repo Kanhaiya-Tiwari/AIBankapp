@@ -26,7 +26,6 @@ A full-stack banking application built with Spring Boot, designed as a hands-on 
 | Metrics   | Spring Actuator, Micrometer         |
 | Container | Docker, Docker Compose              |
 ## Quick Start
-
 ### Run with Docker Compose (recommended)
 
 ```bash
